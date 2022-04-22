@@ -57,7 +57,7 @@ class Agent
     Brain brain;
 
 
-    Agent(int layers, const sf::Vector2f &cent, float scale, int rayCount)
+    Agent(int layers, const sf::Vector2f &cent, float scale, int rayCount, sf::RenderWindow &window)
     {
         sf::Vector2f p1, p2, p3, p4;
 
@@ -92,6 +92,8 @@ class Agent
         }
 
         brain = Brain(layers);
+
+        window.setView(sf::View( center, window.getView().getSize() ));
     }
 
     bool touch( const std :: vector <Edge> &edges )
@@ -112,7 +114,7 @@ class Agent
         return false;
     }
 
-    void translate(float stepSize)
+    void translate(float stepSize, sf::RenderWindow &window)
     {
         setDirection();
 
@@ -130,6 +132,8 @@ class Agent
             rays[i].p1 += step;
             rays[i].p2 += step;
         }
+
+        window.setView(sf::View( center, window.getView().getSize() ));
     }
 
     void rotate(float angle)

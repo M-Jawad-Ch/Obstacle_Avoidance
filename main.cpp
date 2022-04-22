@@ -87,7 +87,11 @@ int main()
 
     load_Path(edges, path, screen, spawn);
 
-    Agent agent(2, spawn, size * width, rayCount);
+    sf::ContextSettings settings; settings.antialiasingLevel = 4.0;
+    sf::RenderWindow window(sf::VideoMode(width, height), "Renderer", sf::Style::Default, settings);
+    sf::Event event;
+
+    Agent agent(2, spawn, size * width, rayCount, window);
     agent.brain.layers[0] = Layer(16, rayCount);
     agent.brain.layers[1] = Layer(4, 16);
 
@@ -95,9 +99,9 @@ int main()
     std::vector<float> actions; actions.resize(3);
     sf::Vector2f target;
     bool Wpress = false, Apress = false, Dpress = false, training = false;
-    sf::ContextSettings settings; settings.antialiasingLevel = 4.0;
-    sf::RenderWindow window(sf::VideoMode(width, height), "Renderer", sf::Style::Default, settings);
-    sf::Event event;
+
+
+    window.setFramerateLimit(60);
 
     DataSet dataSet("DataSet/dataSet.bin");
 
@@ -218,7 +222,7 @@ int main()
         {
             if ( Wpress )
             {
-                agent.translate( steps_per_second * elapsed.count() );
+                agent.translate( steps_per_second * elapsed.count(), window);
             }
 
             if ( Apress )
@@ -236,7 +240,7 @@ int main()
 
         if ( agent.touch(edges) )
         {
-            Agent temp(1, spawn, size * width, rayCount);
+            Agent temp(1, spawn, size * width, rayCount, window);
             temp.brain = agent.brain;
 
             agent = temp;
