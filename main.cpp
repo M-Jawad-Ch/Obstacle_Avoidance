@@ -101,7 +101,7 @@ int main()
     bool Wpress = false, Apress = false, Dpress = false, training = false;
 
 
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(30);
 
     DataSet dataSet("DataSet/dataSet.bin");
 
@@ -202,7 +202,7 @@ int main()
 
         window.clear(sf::Color::Black);
 
-        //window.draw(path);
+        window.draw(path);
 
         window.draw(agent.drawable());
     
