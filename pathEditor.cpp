@@ -3,14 +3,14 @@
 #include<iostream>
 #include<fstream>
 
-void save(sf::VertexArray &path, sf::Vector2f screen, sf::Vector2f spawn)
+void save(sf::VertexArray &path, sf::Vector2f spawn)
 {
     std::vector<float> data;
     
     for(int i = 0; i < path.getVertexCount(); i++)
     {
-        data.push_back( path[i].position.x / screen.x );
-        data.push_back( path[i].position.y / screen.y );
+        data.push_back( path[i].position.x );
+        data.push_back( path[i].position.y );
     }
 
     std :: cout << " Enter the name of your path : ";
@@ -34,8 +34,8 @@ void save(sf::VertexArray &path, sf::Vector2f screen, sf::Vector2f spawn)
         fout.write((char*)&data[i], sizeof(float));
     }
 
-    spawn.x /= screen.x;
-    spawn.y /= screen.y;
+    spawn.x;
+    spawn.y;
 
     fout.write((char*)&spawn.x, sizeof(float));
     fout.write((char*)&spawn.y, sizeof(float));
@@ -51,7 +51,11 @@ int main()
     sf::VertexArray path;
     path.setPrimitiveType(sf::PrimitiveType::Lines);
     bool sameObj = false, target = false; int startOfPath = 0;
-    sf::Vector2f spawn;
+    sf::Vector2f spawn, pos = sf::Vector2f( sf::VideoMode::getDesktopMode().width / 2.0, sf::VideoMode::getDesktopMode().height / 2.0 );
+
+    bool wPress = false, aPress = false, sPress = false, dPress = false;
+
+    sf::Vector2f screen = sf::Vector2f(sf::VideoMode::getDesktopMode().width / 2.0, sf::VideoMode::getDesktopMode().height / 2.0);
 
     while(window.isOpen())
     {
@@ -68,12 +72,14 @@ int main()
                     {
                         if ( path.getVertexCount() > 0 && sameObj )
                         {
-                            path.append( sf::Vertex(sf::Vector2f(sf::Mouse::getPosition(window))) );
+                            sf::Vector2f point = sf::Vector2f(sf::Mouse::getPosition(window)) + pos - screen;
+                            path.append( sf::Vertex( point ) );
                             path.append( path[ path.getVertexCount() - 1 ] );
                         }
                         else
                         {
-                            path.append( sf::Vertex(sf::Vector2f(sf::Mouse::getPosition(window))) );
+                            sf::Vector2f point = sf::Vector2f(sf::Mouse::getPosition(window)) + pos - screen;
+                            path.append( sf::Vertex( point ) );
                             startOfPath = path.getVertexCount() - 1;
                             sameObj = true;
                         }
@@ -93,7 +99,7 @@ int main()
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::S) )
                     {
                         window.close();
-                        save(path, sf::Vector2f( sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height ), spawn);
+                        save(path, spawn);
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::C) )
@@ -106,14 +112,58 @@ int main()
                         spawn = sf::Vector2f(sf::Mouse::getPosition(window));
                     }
 
+                    if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Up) )
+                        wPress = true;
+
+                    if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Left) )
+                        aPress = true;
+
+                    if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Down) )
+                        sPress = true;
+                    
+                    if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Right) )
+                        dPress = true;
+
                     break;
             }
-
-            window.clear(sf::Color::Black);
-
-            window.draw(path);
-
-            window.display();
         }
+
+        if ( wPress )
+        {
+            pos += sf::Vector2f( 0, 5 );
+            wPress = false;
+
+            window.setView(sf::View( pos, sf::Vector2f(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height) ));
+        }
+
+        if ( sPress )
+        {
+            pos += sf::Vector2f( 0, -5 );
+            sPress = false;
+
+            window.setView(sf::View( pos, sf::Vector2f(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height) ));
+        }
+
+        if ( aPress )
+        {
+            pos += sf::Vector2f( -5, 0 );
+            aPress = false;
+
+            window.setView(sf::View( pos, sf::Vector2f(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height) ));
+        }
+
+        if ( dPress )
+        {
+            pos += sf::Vector2f( 5, 0 );
+            dPress = false;
+
+            window.setView(sf::View( pos, sf::Vector2f(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height) ));
+        }
+
+        window.clear(sf::Color::Black);
+
+        window.draw(path);
+
+        window.display();
     }
 }

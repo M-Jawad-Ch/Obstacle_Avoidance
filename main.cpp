@@ -28,18 +28,12 @@ void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices, sf::Vector2f
         fin.read((char*)&temp.x, sizeof(float));
         fin.read((char*)&temp.y, sizeof(float));
 
-        temp.x *= screen.x;
-        temp.y *= screen.y;
-
         tempE.p1 = temp;
         
         vertices.append(sf::Vertex(temp));
 
         fin.read((char*)&temp.x, sizeof(float));
         fin.read((char*)&temp.y, sizeof(float));
-
-        temp.x *= screen.x;
-        temp.y *= screen.y;
 
         tempE.p2 = temp;
         
@@ -53,9 +47,6 @@ void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices, sf::Vector2f
 
     fin.read((char*)&spawn.x, sizeof(float));
     fin.read((char*)&spawn.y, sizeof(float));
-
-    spawn.x *= screen.x;
-    spawn.y *= screen.y;
 
     fin.close();
 }
@@ -77,7 +68,7 @@ int Matrix::threads = 1, Layer::threads = 1;
 
 int main()
 {
-    float pi = 22.0 / 7.0, size = 5.0 / 1300;
+    float pi = 22.0 / 7.0, size = 5;
     float width = 800, height = 600;
     int rayCount = 36;
 
@@ -202,7 +193,7 @@ int main()
 
         window.clear(sf::Color::Black);
 
-        window.draw(path);
+        //window.draw(path);
 
         window.draw(agent.drawable());
     
