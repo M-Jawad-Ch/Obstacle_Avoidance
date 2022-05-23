@@ -6,17 +6,12 @@ class Brain
 {
 public:
     std::vector<Layer> layers;
-    int count;
+    int layerCount;
 
-    Brain()
-    {
-        
-    }
-
-    Brain(int layers)
+    Brain(int layers = 0)
     {
         this -> layers.resize(layers);
-        count = layers;
+        layerCount = layers;
     }
 
     void Decide(const Matrix &input)
@@ -24,30 +19,30 @@ public:
         layers[0].WeightedSums = layers[0].Weights * input + layers[0].Bias;
         layers[0].activate();
 
-        for(int i = 1; i < count - 1; i++)
+        for(int i = 1; i < layerCount - 1; i++)
         {
             layers[i].WeightedSums = layers[i].Weights * layers[i - 1].WeightedSums + layers[i].Bias;
             layers[i].activate();
         }
 
-        layers[count - 1].WeightedSums = layers[count - 1].Weights * layers[count - 2].WeightedSums + layers[count - 1].Bias;
-        layers[count - 1].softMax();
+        layers[layerCount - 1].WeightedSums = layers[layerCount - 1].Weights * layers[layerCount - 2].WeightedSums + layers[layerCount - 1].Bias;
+        layers[layerCount - 1].activate();
     }
 
-    void Train(float *targets, const Matrix &input)
+    void Train(float targets[], const Matrix &input)
     {
         float error = 0;
 
-        for(int i = 0; i < layers[ count - 1 ].Weights.rows ; i++)
+        for(int i = 0; i < layers[ layerCount - 1 ].Weights.rows ; i++)
         {
-            error += pow( targets[i] - layers[ count - 1 ].WeightedSums.arr[i] ,2);
+            error += pow( targets[i] - layers[ layerCount - 1 ].WeightedSums.arr[i] ,2);
         }
 
-        float *cachDeriv = nullptr, *nextCachDeriv = new float [ layers[ count - 2 ].Weights.rows ];
+        float *cachDeriv = nullptr, *nextCachDeriv = new float [ layers[ layerCount - 2 ].Weights.rows ];
 
-        layers[count - 1].backPropOutput(targets, layers[count - 2], nextCachDeriv, 1, error);
+        layers[layerCount - 1].backPropOutput(targets, layers[layerCount - 2], nextCachDeriv, 1, error);
 
-        for(int i = count - 2; i > 0; i--)
+        for(int i = layerCount - 2; i > 0; i--)
         {
             cachDeriv = nextCachDeriv;
 
@@ -63,5 +58,21 @@ public:
         layers[0].backPropHidden(cachDeriv, input, 1, error);
         
         delete[] cachDeriv;
+    }
+
+    std::vector<float> getOutput()
+    {
+        return layers[ layerCount - 1 ].WeightedSums.arr;
+    }
+
+    void save(const std::string &fileName)
+    {
+        std::ofstream fout(fileName, std::ios::binary | std::ios::trunc);
+        fout.close();
+
+        for(int i = 0; i < layerCount; i++)
+        {
+            layers[i].save(fileName);
+        }
     }
 };

@@ -1,14 +1,24 @@
 build: main.cpp
 	g++ main.cpp -lsfml-graphics -lsfml-window -lsfml-system -lpthread -o main.exe
 
-buildPE: pathEditor.cpp
+build-PE: pathEditor.cpp
 	g++ pathEditor.cpp -lsfml-graphics -lsfml-window -lsfml-system -o pathEditor.exe
 
-path:
-	./pathEditor.exe
+trainer:
+	g++ trainer.cpp -lpthread -o trainer.exe
+
+clear:
+	rm *.exe
+
+clean:
+	rm DataSet/dataSet.bin meta-DataSet/dataSet.bin *.exe
+
 
 run:
 	./main.exe
 
-clean:
-	rm *.exe
+path:
+	./pathEditor.exe
+
+train:
+	./trainer.exe

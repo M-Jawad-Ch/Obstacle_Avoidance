@@ -19,7 +19,7 @@ public:
     Layer(int size = 0, int connections = 0)
     {
         Weights = Matrix(size, connections);
-        WeightedSums = Matrix(size, 1);
+        WeightedSums = Matrix(size, 1, true);
         Bias = Matrix(size, 1);
     }
 
@@ -31,6 +31,23 @@ public:
             if(WeightedSums.arr[i] != WeightedSums.arr[i]) 
                 WeightedSums.arr[i] = 1;
         }
+    }
+
+    void save(const std::string &fileName)
+    {
+        std::ofstream fout(fileName, std::ios::binary | std::ios::app);
+
+        for(int i = 0; i < Weights.getElementCount(); i++)
+        {
+            fout.write( (char*)&Weights.arr[i], sizeof(Weights.arr[i]) );
+        }
+
+        for(int i = 0; i < Bias.getElementCount(); i++)
+        {
+            fout.write( (char*)&Bias.arr[i], sizeof(Bias.arr[i]) );
+        }
+
+        fout.close();
     }
 
     void rel()

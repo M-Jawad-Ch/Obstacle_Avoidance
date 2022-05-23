@@ -40,6 +40,11 @@ class Matrix
         }
     }
 
+    int getElementCount()
+    {
+        return rows * cols;
+    }
+
     Matrix operator * (const Matrix &m)                                     // Function that multiplies two matrices using parrallel processing
     {
         if ( cols != m.rows )

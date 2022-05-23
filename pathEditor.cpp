@@ -2,6 +2,7 @@
 #include<vector>
 #include<iostream>
 #include<fstream>
+#include<chrono>
 
 void save(sf::VertexArray &path, sf::Vector2f spawn)
 {
@@ -57,10 +58,20 @@ int main()
 
     sf::Vector2f screen = sf::Vector2f(sf::VideoMode::getDesktopMode().width / 2.0, sf::VideoMode::getDesktopMode().height / 2.0);
 
+    window.setFramerateLimit(60);
+
+    auto start = std::chrono::high_resolution_clock::now();
+
     while(window.isOpen())
     {
+        window.clear(sf::Color::Black);
+
+        window.draw(path);
+
+        window.display();
+
         while(window.pollEvent(event))
-        {
+        {  
             switch (event.type)
             {
                 case ( sf::Event::Closed ):
@@ -128,9 +139,15 @@ int main()
             }
         }
 
+        auto finish = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double> deltaTime = finish - start;
+
+        start = std::chrono::high_resolution_clock::now();
+
         if ( wPress )
         {
-            pos += sf::Vector2f( 0, 5 );
+            pos += sf::Vector2f( 0, 1000 * deltaTime.count() );
             wPress = false;
 
             window.setView(sf::View( pos, sf::Vector2f(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height) ));
@@ -138,7 +155,7 @@ int main()
 
         if ( sPress )
         {
-            pos += sf::Vector2f( 0, -5 );
+            pos += sf::Vector2f( 0, -1000 * deltaTime.count() );
             sPress = false;
 
             window.setView(sf::View( pos, sf::Vector2f(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height) ));
@@ -146,7 +163,7 @@ int main()
 
         if ( aPress )
         {
-            pos += sf::Vector2f( -5, 0 );
+            pos += sf::Vector2f( -1000 * deltaTime.count(), 0 );
             aPress = false;
 
             window.setView(sf::View( pos, sf::Vector2f(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height) ));
@@ -154,16 +171,10 @@ int main()
 
         if ( dPress )
         {
-            pos += sf::Vector2f( 5, 0 );
+            pos += sf::Vector2f( 1000 * deltaTime.count(), 0 );
             dPress = false;
 
             window.setView(sf::View( pos, sf::Vector2f(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height) ));
         }
-
-        window.clear(sf::Color::Black);
-
-        window.draw(path);
-
-        window.display();
     }
 }
