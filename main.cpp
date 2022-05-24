@@ -3,7 +3,6 @@
 #include<iostream>
 #include<chrono>
 
-
 #include<SFML/Graphics.hpp>
 #include"Headers/agent.hpp"
 #include"Headers/dataSet.hpp"
@@ -11,9 +10,9 @@
 
 int main()
 {
-    float pi = 22.0 / 7.0, size = 5;
+    float pi = 22.0 / 7.0, size = 5, maxDist = 500;
     float width = 800, height = 600;
-    int rayCount = 36;
+    int rayCount = 180;
 
     sf::VertexArray path, entities;
     std::vector<Edge> edges;
@@ -27,7 +26,7 @@ int main()
 
     std::string brainFile = "NeuralNets/first.bin";
 
-    Agent agent(2, spawn, size, rayCount, window);
+    Agent agent(2, spawn, size, rayCount, window, maxDist);
     agent.brain.layers[0] = Layer(16, rayCount);
     agent.brain.layers[1] = Layer(3, 16);
 
@@ -240,7 +239,7 @@ int main()
 
         if ( agent.touch(edges) )
         {
-            Agent temp(1, spawn, size, rayCount, window);
+            Agent temp(1, spawn, size, rayCount, window, maxDist);
             temp.brain = agent.brain;
 
             agent = temp;

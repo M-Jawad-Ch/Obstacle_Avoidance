@@ -41,7 +41,7 @@ class Agent
             Edge e;
             e.p1 = center;
 
-            e.p2.x = 10000; e.p2.y = 10000;
+            e.p2.x = MaxDist; e.p2.y = MaxDist;
             e.p2 = transform(e.p2, center, x);
 
             rays.push_back(e);
@@ -49,15 +49,17 @@ class Agent
     }
 
     Edge e1, e2, e3, e4;
+    float maxDist;
 
-    public:
+public:
     sf::Vector2f center, front;
     sf::Vector2f direction;
     std::vector<Edge> rays;
     Brain brain;
+    float MaxDist;
 
 
-    Agent(int layers, const sf::Vector2f &cent, float scale, int rayCount, sf::RenderWindow &window)
+    Agent(int layers, const sf::Vector2f &cent, float scale, int rayCount, sf::RenderWindow &window, float maxDist)
     {
         sf::Vector2f p1, p2, p3, p4;
 
@@ -84,12 +86,9 @@ class Agent
 
         setDirection();
 
-        setRays(rayCount - 1);
+        MaxDist = maxDist;
 
-        for(int i = 0; i < rays.size(); i++)
-        {
-            rays[i].p2 = transform(rays[i].p2, center, (22.0/7.0) / 4);
-        }
+        setRays(rayCount - 1);
 
         brain = Brain(layers);
 
@@ -193,7 +192,7 @@ class Agent
                     Edge e1, e2; e1.p1 = center; e1.p2 = point;
                     e2.p1 = center; e2.p2 = prevPoint;
 
-                    if ( e1.magnitude() < e2.magnitude() )
+                    if ( e1.magnitude() < e2.magnitude() && e1.magnitude() < MaxDist)
                     {   
                         prevPoint = point;
                     }

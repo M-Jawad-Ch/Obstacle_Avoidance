@@ -49,7 +49,7 @@ void getInputs(Matrix &input, const Agent &agent, const std :: vector <sf::Circl
         temp.p1 = agent.center;
         temp.p2 = circle[i].getPosition();
 
-        input.arr[i] = 1.0 / temp.magnitude();
+        input.arr[i] = (agent.MaxDist - temp.magnitude()) / agent.MaxDist;
     }
 }
 

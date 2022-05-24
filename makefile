@@ -11,8 +11,7 @@ clear:
 	rm *.exe
 
 clean:
-	rm DataSet/dataSet.bin meta-DataSet/dataSet.bin *.exe
-
+	rm DataSet/dataSet.bin meta-DataSet/dataSet.bin *.exe NeuralNets/*bin
 
 run:
 	./main.exe
