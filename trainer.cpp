@@ -1,14 +1,14 @@
 #include"Headers/dataSet.hpp"
 #include"Headers/agent.hpp"
 
-int Matrix::threads = 4, Layer::threads = 4;
+int Matrix::threads = 1, Layer::threads = 1;
 
 int main()
 {
     std::string dataSetFile = "DataSet/dataSet.bin";
     DataSet data( dataSetFile ); data.read( dataSetFile );
 
-    float target[3] = {0};
+    float target[2] = {0};
 
     Brain NeuralNet( data.meta.layerCount );
 
@@ -24,7 +24,7 @@ int main()
 
     while(true)
     {
-        for(int i = 0; i < 3; i++)
+        for(int i = 0; i < 2; i++)
         {
             target[i] = data.dataSet[ index ];
             index++;
@@ -47,7 +47,8 @@ int main()
 
             std::cout << " Current Epoch: " << CurrentEpoch << "\n";
 
-            NeuralNet.save("NeuralNets/first.bin");
+            if ( CurrentEpoch % AutoSave == 0 ) 
+                NeuralNet.save("NeuralNets/first.bin");
         }
     }
 }

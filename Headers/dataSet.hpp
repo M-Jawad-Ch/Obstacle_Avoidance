@@ -23,7 +23,7 @@ public:
 
     std::vector<LayerMeta> layerMeta;
 
-    Meta(int rayCount = 0, int layerCount = 0) : rayCount(rayCount), layerCount(layerCount)
+    Meta(int rayCount = 0, int layerCount = 0) : rayCount(rayCount), layerCount(layerCount), floatCount(0)
     {
         layerMeta.resize(layerCount);
     }
@@ -85,12 +85,12 @@ public:
 
     void append(const Matrix &inputs, float *actions)
     {
-        for(int i = 2; i > -1; i--)
+        for(int i = 0; i < 2; i++)
         {
             dataSet.push_back(actions[i]);
         }
 
-        for(int i = inputs.rows - 1; i > -1; i--)
+        for(int i = 0; i < inputs.rows; i++)
         {
             dataSet.push_back( inputs.arr[i] );
         }
@@ -107,7 +107,7 @@ public:
 
         fout.close();
 
-        meta.floatCount = dataSet.size();
+        meta.floatCount += dataSet.size();
 
         meta.save("meta-" + fileName);
 

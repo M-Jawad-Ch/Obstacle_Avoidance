@@ -50,6 +50,40 @@ public:
         fout.close();
     }
 
+    int output()
+    {
+        int max = 0;
+
+        for(int i = 0; i < WeightedSums.arr.size(); i++)
+        {
+            if ( WeightedSums.arr[ max ] < WeightedSums.arr[i] )
+                max = i;
+        }
+
+        return max;
+    }
+
+    Layer crossOver(const Layer &layer)
+    {
+        Layer child( Weights.rows, Weights.cols );
+
+        for(int i = 0; i < Weights.arr.size(); i++)
+        {
+            if ( i % 2 == 0 )
+                child.Weights.arr[i] = Weights.arr[i];
+            else child.Weights.arr[i] = layer.Weights.arr[i];
+        }
+
+        for(int i = 0; i < Bias.arr.size(); i++)
+        {
+            if ( i % 2 == 0 )
+                child.Bias.arr[i] = Bias.arr[i];
+            else child.Bias.arr[i] = layer.Bias.arr[i];
+        }
+
+        return child;
+    }
+
     void rel()
     {
         for(int i = 0; i < WeightedSums.rows; i++)

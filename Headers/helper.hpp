@@ -1,5 +1,4 @@
-
-void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices, sf::Vector2f screen, sf::Vector2f &spawn)
+void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices, sf::Vector2f &spawn)
 {
     std :: cout << " Enter the environment name : ";
     std :: string fileName; std :: cin >> fileName;
@@ -40,18 +39,22 @@ void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices, sf::Vector2f
     fin.close();
 }
 
-void getInputs(Matrix &input, const Agent &agent, const std :: vector <sf::CircleShape> &circle)
+void getInputs(Matrix &input, const Agent &agent, const std :: vector <sf::Vector2f> &points)
 {
     Edge temp;
 
-    for(int i = 0; i < circle.size(); i++)
+    float MaxDist = sqrt( 2*pow(agent.MaxDist,2) );
+
+    for(int i = 0; i < points.size(); i++)
     {
         temp.p1 = agent.center;
-        temp.p2 = circle[i].getPosition();
+        temp.p2 = points[i];
 
-        input.arr[i] = (agent.MaxDist - temp.magnitude()) / agent.MaxDist;
+        input.arr[i] = (MaxDist - temp.magnitude()) / MaxDist;
     }
 }
+
+
 
 void read( Brain &NeuralNet, const std::string &fileName )
 {
@@ -74,4 +77,4 @@ void read( Brain &NeuralNet, const std::string &fileName )
     fin.close();
 }
 
-int Matrix::threads = 4, Layer::threads = 4;
+int Matrix::threads = 1, Layer::threads = 1;

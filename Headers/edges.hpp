@@ -9,6 +9,12 @@ class Edge
 
     sf::Vector2f p1, p2;
 
+    Edge()
+    {}
+
+    Edge(sf::Vector2f p, sf::Vector2f q) : p1(p), p2(q)
+    {}
+
     sf::Vector2f midPoint()
     {
         return sf::Vector2f((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);

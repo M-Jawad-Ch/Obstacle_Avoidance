@@ -36,13 +36,15 @@ class Agent
     {
         float pi = 22.0 / 7.0;
 
-        for(float x = 0; x <= pi; x += pi / rayCount)
+        for(float x = 0; x < 2*pi; x += 2*pi / rayCount)
         {
             Edge e;
             e.p1 = center;
 
-            e.p2.x = MaxDist; e.p2.y = MaxDist;
-            e.p2 = transform(e.p2, center, x);
+            e.p2.x = MaxDist; e.p2.y = 0;
+            e.p2 = transform(e.p2, sf::Vector2f(0,0), x);
+            
+            e.p2.x += center.x; e.p2.y += center.y;
 
             rays.push_back(e);
         }
@@ -57,10 +59,13 @@ public:
     std::vector<Edge> rays;
     Brain brain;
     float MaxDist;
+    bool isAlive;
 
 
     Agent(int layers, const sf::Vector2f &cent, float scale, int rayCount, sf::RenderWindow &window, float maxDist)
     {
+        isAlive = true;
+
         sf::Vector2f p1, p2, p3, p4;
 
         p1.x = -1.5; p1.y = -2;
@@ -88,7 +93,7 @@ public:
 
         MaxDist = maxDist;
 
-        setRays(rayCount - 1);
+        setRays(rayCount);
 
         brain = Brain(layers);
 
@@ -113,7 +118,7 @@ public:
         return false;
     }
 
-    void translate(float stepSize, sf::RenderWindow &window)
+    void translate(float stepSize)
     {
         setDirection();
 
@@ -131,8 +136,6 @@ public:
             rays[i].p1 += step;
             rays[i].p2 += step;
         }
-
-        window.setView(sf::View( center, window.getView().getSize() ));
     }
 
     void rotate(float angle)
@@ -177,9 +180,9 @@ public:
         return array;
     }
 
-    std::vector<sf::CircleShape> inter(const std::vector<Edge> &entites)
+    std::vector<sf::Vector2f> inter(const std::vector<Edge> &entites)
     {
-        std::vector<sf::CircleShape> array;
+        std::vector<sf::Vector2f> array;
 
         for(int i = 0; i < rays.size(); i++)
         {
@@ -192,17 +195,14 @@ public:
                     Edge e1, e2; e1.p1 = center; e1.p2 = point;
                     e2.p1 = center; e2.p2 = prevPoint;
 
-                    if ( e1.magnitude() < e2.magnitude() && e1.magnitude() < MaxDist)
+                    if ( e1.magnitude() < e2.magnitude() && e1.magnitude() < MaxDist )
                     {   
                         prevPoint = point;
                     }
                 }
             }
-
-            sf::CircleShape circle(1, 8);
-            circle.setPosition(prevPoint);
-            circle.setOrigin(1, 1);
-            array.push_back(circle);
+            
+            array.push_back(prevPoint);
         }
 
         return array;

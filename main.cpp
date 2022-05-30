@@ -8,52 +8,51 @@
 #include"Headers/dataSet.hpp"
 #include"Headers/helper.hpp"
 
+const float PI = 22.0 / 7.0;
+const float STEPS_PER_SECOND = 100;
+const float RADIANS_PER_SECOND =  PI / 2.0;
+const float AGENT_SIZE = 5;
+
+const int RAY_COUNT = 32;
+const int MAX_DISTANCE = 60;
+const int AGENT_COUNT = 10;
+const int LAYER_COUNT = 2;
+
+const int SECOND_LAYER_SIZE = 8;
+const int CLASSES = 3;
+
+int SCREEN_WIDTH = 800;
+int SCREEN_HEIGHT = 600;
+
 int main()
 {
-    float pi = 22.0 / 7.0, size = 5, maxDist = 500;
-    float width = 800, height = 600;
-    int rayCount = 180;
-
     sf::VertexArray path, entities;
     std::vector<Edge> edges;
-    sf::Vector2f screen( width, height ), spawn;
+    sf::Vector2f spawn;
 
-    load_Path(edges, path, screen, spawn);
+    load_Path(edges, path, spawn);
 
     sf::ContextSettings settings; settings.antialiasingLevel = 4.0;
-    sf::RenderWindow window(sf::VideoMode(width, height), "Renderer", sf::Style::Default, settings);
+    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Renderer", sf::Style::Default, settings);
     sf::Event event;
 
-    std::string brainFile = "NeuralNets/first.bin";
+    std::vector<Agent> Agents;
+    for(int i = 0; i < AGENT_COUNT; i++)
+    {
+        Agent agent( LAYER_COUNT , spawn, AGENT_SIZE, RAY_COUNT, window, MAX_DISTANCE);
+        agent.brain.layers[0] = Layer(SECOND_LAYER_SIZE, RAY_COUNT);
+        agent.brain.layers[1] = Layer(CLASSES, SECOND_LAYER_SIZE);
 
-    Agent agent(2, spawn, size, rayCount, window, maxDist);
-    agent.brain.layers[0] = Layer(16, rayCount);
-    agent.brain.layers[1] = Layer(3, 16);
+        Agents.push_back(agent);
+    }
 
-    read( agent.brain, brainFile );
-
-    Matrix input = Matrix(rayCount, 1, 1);
-    float actions[3] = {0};
-    sf::Vector2f target;
-    bool Wpress = false, Apress = false, Dpress = false, testing = false, training = false;
-    int index = 0, Epoch = 1;
+    Matrix input = Matrix(RAY_COUNT, 1, 1);
+    float actions[ CLASSES ] = {0};
+    bool pathVisible = true;
 
     window.setFramerateLimit(60);
 
-    DataSet dataSet("DataSet/dataSet.bin");
-
-    dataSet.meta.layerCount = agent.brain.layerCount;
-    dataSet.meta.rayCount = agent.rays.size();
-
-    dataSet.meta.layerMeta.resize( dataSet.meta.layerCount );
-
-    for(int i = 0; i < agent.brain.layerCount; i++)
-    {
-        dataSet.meta.layerMeta[i].rows = agent.brain.layers[i].Weights.rows;
-        dataSet.meta.layerMeta[i].cols = agent.brain.layers[i].Weights.cols;
-    }
-
-    float steps_per_second = 100, angle_per_second = ( pi / 2 );
+    sf::VertexArray Agent_Bodies, Agent_Body;
 
     while(window.isOpen())
     {
@@ -76,89 +75,38 @@ int main()
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Left) )
                     {
-                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x + 20, window.getView().getCenter().y ), window.getView().getSize() ) );
+                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x - 20, window.getView().getCenter().y ), window.getView().getSize() ) );
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Right) )
                     {
-                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x - 20, window.getView().getCenter().y ), window.getView().getSize() ) );
+                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x + 20, window.getView().getCenter().y ), window.getView().getSize() ) );
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Up) )
                     {
-                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x, window.getView().getCenter().y + 20 ), window.getView().getSize() ) );
+                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x, window.getView().getCenter().y - 20 ), window.getView().getSize() ) );
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Down) )
                     {
-                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x, window.getView().getCenter().y - 20 ), window.getView().getSize() ) );
+                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x, window.getView().getCenter().y + 20 ), window.getView().getSize() ) );
                     }
 
-                    if ( sf::Keyboard::isKeyPressed(sf::Keyboard::T) )
+                    if ( sf::Keyboard::isKeyPressed(sf::Keyboard::P) )
                     {
-                        if ( testing )
+                        if ( pathVisible )
                         {
-                            testing = false;
-                            std :: cout << " Testing toggled off\n";
+                            pathVisible = false;
+                            std :: cout << " Path invisible\n";
                         }
-                        else 
+                        else
                         {
-                            testing = true;
-                            training = false;
-                            std :: cout << " Testing toggled on and training toggled off\n";
-                        }
-                    }
-
-                    if (!testing )
-                    {
-                        if ( sf::Keyboard::isKeyPressed(sf::Keyboard::K) )
-                        {
-                            std :: cout << " DataSet saved\n";
-                            dataSet.save();
-                        }
-
-                        if ( sf::Keyboard::isKeyPressed(sf::Keyboard::W) )
-                        {
-                            Wpress = true;
-                            actions[0] = 1;
-                        }
-
-                        if ( sf::Keyboard::isKeyPressed(sf::Keyboard::A) )
-                        {
-                            Apress = true;
-                            actions[1] = 1;
-                        }
-
-                        if ( sf::Keyboard::isKeyPressed(sf::Keyboard::D) )
-                        {
-                            Dpress = true;
-                            actions[2] = 1;
+                            pathVisible = true;
+                            std :: cout << " Path visible\n";
                         }
                     }
 
-                    break;
-                }
-
-                case ( sf::Event::KeyReleased ):
-                {
-                    if ( !sf::Keyboard::isKeyPressed(sf::Keyboard::W) )
-                    {
-                        Wpress = false;
-                        actions[0] = 0;
-                    }
-
-                    if ( !sf::Keyboard::isKeyPressed(sf::Keyboard::A) )
-                    {
-                        Apress = false;
-                        actions[1] = 0;
-                    }
-                    
-                    if ( !sf::Keyboard::isKeyPressed(sf::Keyboard::D) )
-                    {
-                        Dpress = false;
-                        actions[2] = 0;
-                    }
-                    
                     break;
                 }
 
@@ -169,82 +117,54 @@ int main()
 
         window.clear(sf::Color::Black);
 
-        //window.draw(path);
+        if ( pathVisible ) window.draw(path);
 
-        window.draw(agent.drawable());
-    
-        std :: vector <sf::CircleShape> circle = agent.inter(edges);
-        for(int i = 0; i < rayCount; i++)
+        for(int i = 0; i < AGENT_COUNT; i++)
         {
-            window.draw( circle[i] );
+            if ( Agents[i].isAlive )
+            {
+                Agent_Body = Agents[i].drawable();
+
+                for(int j = 0; j < Agent_Body.getVertexCount(); j++)
+                {
+                    Agent_Bodies.append( Agent_Body[j] );
+                }
+
+                Agent_Body.clear();
+            }
         }
 
+        Agent_Bodies.setPrimitiveType( sf::PrimitiveType::Lines );
+        window.draw( Agent_Bodies ); Agent_Bodies.clear();
         window.display();
 
         auto finish = std::chrono::high_resolution_clock::now();
-
         std::chrono::duration<double> elapsed = finish - start;
 
-        if ( testing )
+
+        for(int i = 0; i < AGENT_COUNT; i++)
         {
-            getInputs(input, agent, circle);
+            if ( Agents[i].touch(edges) ) Agents[i].isAlive = false;
 
-            agent.brain.Decide(input);
-            
-            if ( agent.brain.getOutput()[0] > 0.5 )
+            if ( Agents[i].isAlive )
             {
-                agent.translate( steps_per_second * elapsed.count(), window);
-                actions[0] = 1;
-            }
-            else actions[0] = 0;
+                getInputs( input, Agents[i], Agents[i].inter(edges) );
 
-            if ( agent.brain.getOutput()[1] > 0.5)
-            {
-                agent.rotate( angle_per_second * elapsed.count() );
-                actions[1] = 1;
-            }
-            else actions[1] = 0;
-
-            if ( agent.brain.getOutput()[2] > 0.5)
-            {
-                agent.rotate( -angle_per_second * elapsed.count() );
-                actions[2] = 1;
-            }
-            else actions[2] = 0;
-        }
-        else
-        {
-            if ( Wpress || Apress || Dpress )
-            {
-                if ( Wpress )
+                switch ( Agents[i].brain.layers[ LAYER_COUNT - 1 ].output() )
                 {
-                    agent.translate( steps_per_second * elapsed.count(), window);
+                    case 0:
+                        Agents[i].translate( STEPS_PER_SECOND * elapsed.count() );
+                        break;
+
+                    case 1:
+                        Agents[i].rotate( RADIANS_PER_SECOND * elapsed.count() );
+                        break;
+
+                    case 2:
+                        Agents[i].rotate( - RADIANS_PER_SECOND * elapsed.count() );
+                        break;
                 }
-
-                if ( Apress )
-                {
-                    agent.rotate( angle_per_second * elapsed.count() );
-                }
-
-                if ( Dpress )
-                {
-                    agent.rotate( -angle_per_second * elapsed.count() );
-                }
-
-                getInputs(input, agent, circle);
-
-                dataSet.append(input, actions);
             }
-        }
-
-        if ( agent.touch(edges) )
-        {
-            Agent temp(1, spawn, size, rayCount, window, maxDist);
-            temp.brain = agent.brain;
-
-            agent = temp;
-
-            dataSet.clear();
         }
     }
 }
