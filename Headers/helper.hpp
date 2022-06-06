@@ -1,4 +1,4 @@
-void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices, sf::Vector2f &spawn)
+void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices)
 {
     std :: cout << " Enter the environment name : ";
     std :: string fileName; std :: cin >> fileName;
@@ -33,8 +33,16 @@ void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices, sf::Vector2f
 
     vertices.setPrimitiveType(sf::PrimitiveType::Lines);
 
-    fin.read((char*)&spawn.x, sizeof(float));
-    fin.read((char*)&spawn.y, sizeof(float));
+    int SpawnPosCount;
+
+    fin.read((char*)&SpawnPosCount, sizeof(int));
+    SPAWNS.resize( SpawnPosCount );
+
+    for(int i = 0; i < SpawnPosCount; i++)
+    {
+        fin.read((char*)&SPAWNS[i].x, sizeof(float));
+        fin.read((char*)&SPAWNS[i].y, sizeof(float));
+    }
 
     fin.close();
 }
@@ -76,5 +84,3 @@ void read( Brain &NeuralNet, const std::string &fileName )
 
     fin.close();
 }
-
-int Matrix::threads = 1, Layer::threads = 1;

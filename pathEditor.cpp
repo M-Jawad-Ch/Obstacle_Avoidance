@@ -4,7 +4,7 @@
 #include<fstream>
 #include<chrono>
 
-void save(sf::VertexArray &path, sf::Vector2f spawn)
+void save(sf::VertexArray &path, const std::vector<sf::Vector2f> &Spawns)
 {
     std::vector<float> data;
     
@@ -35,11 +35,15 @@ void save(sf::VertexArray &path, sf::Vector2f spawn)
         fout.write((char*)&data[i], sizeof(float));
     }
 
-    spawn.x;
-    spawn.y;
+    int size = Spawns.size();
 
-    fout.write((char*)&spawn.x, sizeof(float));
-    fout.write((char*)&spawn.y, sizeof(float));
+    fout.write((char*)&size, sizeof(int));
+
+    for(int i = 0; i < Spawns.size(); i++)
+    {
+        fout.write((char*)&Spawns[i].x, sizeof(float));
+        fout.write((char*)&Spawns[i].y, sizeof(float));
+    }
 
     fout.close();
 }
@@ -52,7 +56,9 @@ int main()
     sf::VertexArray path;
     path.setPrimitiveType(sf::PrimitiveType::Lines);
     bool sameObj = false, target = false; int startOfPath = 0;
-    sf::Vector2f spawn, pos = sf::Vector2f( sf::VideoMode::getDesktopMode().width / 2.0, sf::VideoMode::getDesktopMode().height / 2.0 );
+    sf::Vector2f pos = sf::Vector2f( sf::VideoMode::getDesktopMode().width / 2.0, sf::VideoMode::getDesktopMode().height / 2.0 );
+
+    std::vector<sf::Vector2f> Spawns;
 
     bool wPress = false, aPress = false, sPress = false, dPress = false;
 
@@ -110,7 +116,7 @@ int main()
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::S) )
                     {
                         window.close();
-                        save(path, spawn);
+                        save(path, Spawns);
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::C) )
@@ -120,7 +126,12 @@ int main()
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::P) )
                     {
-                        spawn = sf::Vector2f(sf::Mouse::getPosition(window));
+                        Spawns.push_back(sf::Vector2f(sf::Mouse::getPosition(window)));
+                    }
+
+                    if ( sf::Keyboard::isKeyPressed(sf::Keyboard::L) )
+                    {
+                        Spawns.clear();
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Up) )

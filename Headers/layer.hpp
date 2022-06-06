@@ -63,20 +63,20 @@ public:
         return max;
     }
 
-    Layer crossOver(const Layer &layer)
+    Layer crossOver(const Layer &layer, int Remainder)
     {
         Layer child( Weights.rows, Weights.cols );
 
         for(int i = 0; i < Weights.arr.size(); i++)
         {
-            if ( i % 2 == 0 )
+            if ( i % 2 == Remainder )
                 child.Weights.arr[i] = Weights.arr[i];
             else child.Weights.arr[i] = layer.Weights.arr[i];
         }
 
         for(int i = 0; i < Bias.arr.size(); i++)
         {
-            if ( i % 2 == 0 )
+            if ( i % 2 == Remainder )
                 child.Bias.arr[i] = Bias.arr[i];
             else child.Bias.arr[i] = layer.Bias.arr[i];
         }
@@ -215,3 +215,5 @@ public:
         }
     }
 };
+
+int Layer::threads = 1;

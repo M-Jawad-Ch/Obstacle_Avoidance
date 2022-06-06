@@ -29,18 +29,6 @@ public:
         layers[layerCount - 1].activate();
     }
 
-    Brain CrossOver(const Brain &brain)
-    {
-        Brain child = brain;
-
-        for(int i = 0; i < layerCount; i++)
-        {
-            child.layers[i] = layers[i].crossOver(brain.layers[i]);
-        }
-
-        return child;
-    }
-
     void Train(float targets[], const Matrix &input)
     {
         float error = 0;

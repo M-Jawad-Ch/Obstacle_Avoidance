@@ -2,8 +2,11 @@
 
 #include"edges.hpp"
 #include"brain.hpp"
+#include"../variables.hpp"
 
 #include<vector>
+#include<chrono>
+#include<random>
 
 #include<SFML/Graphics.hpp>
 
@@ -50,21 +53,71 @@ class Agent
         }
     }
 
+    Agent CrossOver(const Agent &SecondParent, int Remainder)
+    {
+        Agent Child( brain.layerCount, AGENT_SIZE, RAY_COUNT, MAX_DISTANCE  );
+
+        for(int i = 0; i < LAYER_COUNT; i++)
+        {
+            Child.brain.layers[i] = brain.layers[i].crossOver(SecondParent.brain.layers[i], Remainder);
+        }
+        
+        return Child;
+    }
+
+    void Mutate()
+    {
+        std::uniform_int_distribution<int> layerToMutate(0, LAYER_COUNT - 1);
+        std::uniform_int_distribution<int> WeightCountToMutate(0, MAX_MUTATED_WEIGHTS);
+
+        unsigned int WeightsToMutate = WeightCountToMutate( ENGINE ), Layer = layerToMutate(ENGINE), Weight;
+        std::uniform_int_distribution<int> Weights(0, brain.layers[ Layer ].Weights.arr.size());
+
+        for(int i = 0; i < WeightsToMutate; i++)
+        {
+            Weight = Weights(ENGINE);
+            brain.layers[ Layer ].Weights.arr[ Weight ] += 0.25 * brain.layers[ Layer ].Weights.arr[ Weight ];
+        }
+    }
+
+    struct Data 
+    {
+        float Upper_Bound, Lower_Bound;
+    };
+
     Edge e1, e2, e3, e4;
     float maxDist;
+    std::uniform_int_distribution<int> SpawnPos;
 
 public:
     sf::Vector2f center, front;
     sf::Vector2f direction;
+    sf::Vector2f Spawn;
     std::vector<Edge> rays;
     Brain brain;
     float MaxDist;
     bool isAlive;
 
+    float Fitness;
+    float MaxDistance;
+    float MaxDisplacement;
+    float LifeSpan;
 
-    Agent(int layers, const sf::Vector2f &cent, float scale, int rayCount, sf::RenderWindow &window, float maxDist)
+    Agent(int layers, float scale, int rayCount, float maxDist)
     {
+        LifeSpan = 0;
+        Fitness = 0;
         isAlive = true;
+
+        MaxDistance = 0;
+        MaxDisplacement = 0;
+
+        SpawnPos = std::uniform_int_distribution<int>(0, SPAWNS.size() - 1);
+
+        sf::Vector2f cent = SPAWNS[SpawnPos(ENGINE)];
+        Spawn = cent;
+
+        MaxDist = 0;
 
         sf::Vector2f p1, p2, p3, p4;
 
@@ -96,8 +149,112 @@ public:
         setRays(rayCount);
 
         brain = Brain(layers);
+    }
 
-        window.setView(sf::View( center, window.getView().getSize() ));
+    static void Reproduce(std::vector<Agent> &Agents)
+    {
+        std::vector<Data> data;
+        data.resize(Agents.size());
+
+        float totalFitness = 0;
+        float upperBound = 0, lowerBound = 0, pos;
+
+        std::uniform_int_distribution<int> Dist( 0, 100 );
+
+        bool breaker = false;
+
+        int firstParent, secondParent;
+
+        std::vector<Agent> Children;
+
+        for(int i = AGENT_COUNT; i > 0; i -= 2)
+        {
+            totalFitness = 0; upperBound = 0; lowerBound = 0;
+            for(int j = 0; j < Agents.size(); j++)
+            {
+                totalFitness += Agents[j].Fitness;
+            }
+
+            if ( totalFitness == 0 ) totalFitness = 1;
+
+            for(int j = 0; j < Agents.size(); j++)
+            {
+                    upperBound += Agents[j].Fitness / totalFitness * 100.0;
+
+                    data[j].Lower_Bound = lowerBound;
+                    data[j].Upper_Bound = upperBound;
+
+                    lowerBound = upperBound;
+            }
+
+            while(true)
+            {
+                pos = Dist( ENGINE );
+                for(int j = 0; j < Agents.size(); j++)
+                {
+                    if ( pos <= data[j].Upper_Bound && pos >= data[j].Lower_Bound )
+                    {
+                        firstParent = j;
+                        breaker = true;
+                        break;
+                    }
+                }
+                if ( breaker )
+                    break;
+            }
+
+            breaker = false;
+
+            while(true)
+            {
+                pos = Dist( ENGINE );
+                for(int j = 0; j < Agents.size(); j++)
+                {
+                    if ( pos <= data[j].Upper_Bound && pos >= data[j].Lower_Bound && j != firstParent)
+                    {
+                        secondParent = j;
+                        breaker = true;
+                        break;
+                    }
+                }
+                if ( breaker )
+                    break;
+            }
+
+
+            Agent child1 = Agents[ firstParent ].CrossOver( Agents[ secondParent ], 1 ),
+                child2 = Agents[ secondParent ].CrossOver( Agents[ firstParent ], 1 );
+
+            child1.Mutate();
+            child2.Mutate();
+
+            Children.push_back( child1 );
+            Children.push_back( child2 );
+
+            totalFitness = 0;
+        }
+
+        Agents = Children;
+    }
+
+    static void AssignFitness(std::vector<Agent> &Agents)
+    {
+        for(int i = 0; i < Agents.size(); i++)
+        {
+            Agents[i].Fitness = Agents[i].LifeSpan * Agents[i].MaxDistance * Agents[i].MaxDisplacement;
+            if ( Agents[i].Fitness < 0 ) Agents[i].Fitness = 0;
+        }
+
+        float totalFitness = 0;
+        for(int i = 0; i < Agents.size(); i++)
+        {
+            totalFitness += Agents[i].Fitness;
+        }
+
+        for(int i = 0; i < Agents.size(); i++)
+        {
+            Agents[i].Fitness /= totalFitness;
+        }
     }
 
     bool touch( const std :: vector <Edge> &edges )

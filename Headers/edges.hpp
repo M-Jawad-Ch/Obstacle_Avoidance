@@ -1,6 +1,7 @@
 #pragma once
 
 #include<math.h>
+#include<climits>
 #include<SFML/System.hpp>
 
 class Edge
@@ -32,6 +33,9 @@ bool Intersection(const Edge edge1, const Edge edge2, sf::Vector2f &interPoint)
 
     m1 = (edge1.p2.y - edge1.p1.y) / (edge1.p2.x - edge1.p1.x);
     m2 = (edge2.p2.y - edge2.p1.y) / (edge2.p2.x - edge2.p1.x);
+
+    if ( edge1.p2.x - edge1.p1.x == 0 ) m1 = __FLT_MAX__;
+    if ( edge2.p2.x - edge2.p1.x == 0 ) m2 = __FLT_MAX__;
 
     float x = ( m2 * edge2.p1.x - m1 * edge1.p1.x + edge1.p1.y - edge2.p1.y) / ( m2 - m1 );
 

@@ -4,20 +4,20 @@
 #include<random>
 #include<thread>
 #include<iostream>
+#include<climits>
+
+#include"../variables.hpp"
 
 class Matrix
 {
     void init(float input)                                                  // Initiallizes weights for weight matrices using 'He Initiallization'
     {
-        std::random_device rdev;
-        std::uniform_real_distribution<float> dist(0, 1.0 / 0.0);
+        std::uniform_real_distribution<float> WeightDist( -1/sqrt(input), 1/sqrt(input) );
 
-        std::default_random_engine eng( dist(rdev) );                       // Providing the seed to the random number generator using a non-deterministic random number generator
-        dist = std::uniform_real_distribution<float>  ( -1/sqrt(input), 1/sqrt(input) );
 
         for(int i = 0; i < rows*cols; i++)
         {
-            arr[i] = dist( eng );
+            arr[i] = WeightDist( ENGINE );
         }
     }
 
@@ -137,3 +137,6 @@ class Matrix
         arr = m.arr;
     }
 };
+
+
+int Matrix::threads = 1;
