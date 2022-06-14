@@ -1,7 +1,12 @@
-void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices)
+void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices, std::vector<sf::Vector2f> &spawns, std::string PathFileName = "")
 {
-    std :: cout << " Enter the environment name : ";
-    std :: string fileName; std :: cin >> fileName;
+    std::string fileName = PathFileName;
+
+    if ( PathFileName == "" )
+    {
+        std :: cout << " Enter the environment name : ";
+        fileName; std :: cin >> fileName;
+    }
 
     fileName = "Environments/" + fileName + ".bin";
 
@@ -36,12 +41,12 @@ void load_Path(std::vector<Edge> &edges, sf::VertexArray &vertices)
     int SpawnPosCount;
 
     fin.read((char*)&SpawnPosCount, sizeof(int));
-    SPAWNS.resize( SpawnPosCount );
+    spawns.resize( SpawnPosCount );
 
     for(int i = 0; i < SpawnPosCount; i++)
     {
-        fin.read((char*)&SPAWNS[i].x, sizeof(float));
-        fin.read((char*)&SPAWNS[i].y, sizeof(float));
+        fin.read((char*)&spawns[i].x, sizeof(float));
+        fin.read((char*)&spawns[i].y, sizeof(float));
     }
 
     fin.close();
@@ -83,4 +88,19 @@ void read( Brain &NeuralNet, const std::string &fileName )
     }
 
     fin.close();
+}
+
+void Displace( sf::RenderWindow &window, float DeltaTime, bool Up, bool Down, bool Left, bool Right )
+{
+    if ( Up )
+        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x, window.getView().getCenter().y - SCREEN_DISPLACEMENT_PER_SECOND * DeltaTime ), window.getView().getSize() ) );
+
+    if ( Down )
+        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x, window.getView().getCenter().y + SCREEN_DISPLACEMENT_PER_SECOND * DeltaTime ), window.getView().getSize() ) );
+
+    if ( Left )
+        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x - SCREEN_DISPLACEMENT_PER_SECOND * DeltaTime, window.getView().getCenter().y ), window.getView().getSize() ) );
+
+    if ( Right )
+        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x + SCREEN_DISPLACEMENT_PER_SECOND * DeltaTime, window.getView().getCenter().y ), window.getView().getSize() ) );
 }

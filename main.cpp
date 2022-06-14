@@ -18,10 +18,19 @@ int main()
     std::random_device rDev;
     ENGINE.seed( seedGen(rDev) );
 
-    sf::VertexArray path, entities;
-    std::vector<Edge> edges;
+    int CurrentPath = 0;
 
-    load_Path(edges, path);
+    std::string pathNames[] = {"path1", "path2"};
+    int pathCount = sizeof(pathNames) / sizeof(pathNames[0]);
+    
+    sf::VertexArray *VertexArrays = new sf::VertexArray[ pathCount ];
+    std::vector<Edge> *PATHS = new std::vector<Edge>[ pathCount ];
+    std::vector<sf::Vector2f> *SPAWNS = new std::vector<sf::Vector2f>[ pathCount ];
+
+    for(int i = 0; i < pathCount; i++)
+    {
+        load_Path( PATHS[i], VertexArrays[i], SPAWNS[i], pathNames[i] );
+    }
 
     sf::ContextSettings settings; settings.antialiasingLevel = 4.0;
     sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Renderer", sf::Style::Default, settings);
@@ -30,7 +39,7 @@ int main()
     std::vector<Agent> Agents;
     for(int i = 0; i < AGENT_COUNT; i++)
     {
-        Agent agent( LAYER_COUNT , AGENT_SIZE, RAY_COUNT, MAX_DISTANCE);
+        Agent agent( LAYER_COUNT , AGENT_SIZE, RAY_COUNT, MAX_DISTANCE, SPAWNS[ CurrentPath ]);
         agent.brain.layers[0] = Layer(SECOND_LAYER_SIZE, RAY_COUNT);
         agent.brain.layers[1] = Layer(CLASSES, SECOND_LAYER_SIZE);
 
@@ -40,7 +49,7 @@ int main()
     Matrix input = Matrix(RAY_COUNT, 1, 1);
     float actions[ CLASSES ] = {0};
     bool pathVisible = true;
-    Timer GeneratioLife;
+    Timer GenerationLife;
     int GenerationCount = 1;
 
     window.setFramerateLimit( FRAMES_PER_SECOND );
@@ -55,13 +64,7 @@ int main()
         {
             if ( Agents[i].isAlive )
             {
-                if ( Agents[i].LifeSpan == MAX_TICKS_PER_AGENT )
-                {
-                    ALIVE_AGENTS = 0;
-                    break;
-                }
-
-                getInputs( input, Agents[i], Agents[i].inter(edges) );
+                getInputs( input, Agents[i], Agents[i].inter( PATHS[CurrentPath] ) );
 
                 Agents[i].brain.Decide(input);
 
@@ -91,16 +94,24 @@ int main()
                 if ( Agents[i].MaxDisplacement < Edge( Agents[i].center, Agents[i].Spawn ).magnitude() )
                     Agents[i].MaxDisplacement = Edge( Agents[i].center, Agents[i].Spawn ).magnitude();
                 
-                if ( Agents[i].touch(edges) )
+                if ( Agents[i].touch( PATHS[CurrentPath] ) )
                 {
                     Agents[i].isAlive = false;
                     ALIVE_AGENTS--;
                 }
             }
         }
+
+        if ( (int)GenerationLife.getInterval().count() == MAX_SIMULATION_DURATION )
+        {
+            ALIVE_AGENTS = 0;
+            return;
+        }
     };
 
     std::string th = "st";
+
+    bool Up = false, Down = false, Left = false, Right = false;
 
     while(window.isOpen())
     {
@@ -130,22 +141,22 @@ int main()
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Left) )
                     {
-                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x - 20, window.getView().getCenter().y ), window.getView().getSize() ) );
+                        Left = true;
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Right) )
                     {
-                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x + 20, window.getView().getCenter().y ), window.getView().getSize() ) );
+                        Right = true;
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Up) )
                     {
-                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x, window.getView().getCenter().y - 20 ), window.getView().getSize() ) );
+                        Up = true;
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::Down) )
                     {
-                        window.setView( sf::View( sf::Vector2f( window.getView().getCenter().x, window.getView().getCenter().y + 20 ), window.getView().getSize() ) );
+                        Down = true;
                     }
 
                     if ( sf::Keyboard::isKeyPressed(sf::Keyboard::P) )
@@ -163,6 +174,16 @@ int main()
                     }
 
                     break;
+
+                    case sf::Event::KeyReleased:
+                        if ( !sf::Keyboard::isKeyPressed(sf::Keyboard::Up) )
+                            Up = false;
+                        if ( !sf::Keyboard::isKeyPressed(sf::Keyboard::Down) )
+                            Down = false;
+                        if ( !sf::Keyboard::isKeyPressed(sf::Keyboard::Left) )
+                            Left = false;
+                        if ( !sf::Keyboard::isKeyPressed(sf::Keyboard::Right) )
+                            Right = false;
                 }
 
             default:
@@ -170,11 +191,11 @@ int main()
             }
         }
 
-        window.setTitle( "ALIVE: " + std::to_string(ALIVE_AGENTS) + "/" + std::to_string(AGENT_COUNT) + "     " + std::to_string(GenerationCount) + th + " Gen     Duration: " + std::to_string((int)GeneratioLife.getInterval().count()) + "/" + std::to_string(MAX_SIMULATION_DURATION) + "s" );
+        window.setTitle( "ALIVE: " + std::to_string(ALIVE_AGENTS) + "/" + std::to_string(AGENT_COUNT) + "     " + std::to_string(GenerationCount) + th + " Gen     Duration: " + std::to_string((int)GenerationLife.getInterval().count()) + "/" + std::to_string(MAX_SIMULATION_DURATION) + "s" );
 
         window.clear(sf::Color::Black);
 
-        if ( pathVisible ) window.draw(path);
+        if ( pathVisible ) window.draw( VertexArrays[CurrentPath] );
 
         for(int i = 0; i < AGENT_COUNT; i++)
         {
@@ -197,6 +218,8 @@ int main()
 
         auto finish = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = finish - start;
+
+        Displace(window, elapsed.count(), Up, Down, Left, Right);
 
 
         for(int i = 0; i < THREAD_COUNT; i++)
@@ -223,16 +246,19 @@ int main()
 
         if ( ALIVE_AGENTS == 0 )
         {
-            GeneratioLife.stop();
+            GenerationLife.stop();
 
             Agent::AssignFitness(Agents);
 
-            Agent::Reproduce( Agents );
+            if ( CurrentPath == pathCount - 1 ) CurrentPath = 0;
+            else CurrentPath++;
+
+            Agent::Reproduce( Agents, SPAWNS[CurrentPath] );
 
             ALIVE_AGENTS = AGENT_COUNT;
 
             GenerationCount++;
-            GeneratioLife.reset();
+            GenerationLife.reset();
 
             switch ( GenerationCount % 10 )
             {
@@ -253,8 +279,10 @@ int main()
             if ( GenerationCount == 11 || GenerationCount == 12 || GenerationCount == 13 )
                 th = "th";
 
-            MAX_SIMULATION_DURATION *= 1.25;
-            MAX_TICKS_PER_AGENT = MAX_SIMULATION_DURATION * FRAMES_PER_SECOND;
+            MAX_SIMULATION_DURATION *= 1.1;
         }
     }
+
+    delete[] PATHS;
+    delete[] VertexArrays;
 }

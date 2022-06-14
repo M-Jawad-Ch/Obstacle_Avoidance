@@ -53,9 +53,9 @@ class Agent
         }
     }
 
-    Agent CrossOver(const Agent &SecondParent, int Remainder)
+    Agent CrossOver(const Agent &SecondParent, int Remainder, const std::vector<sf::Vector2f> &SPAWNS)
     {
-        Agent Child( brain.layerCount, AGENT_SIZE, RAY_COUNT, MAX_DISTANCE  );
+        Agent Child( brain.layerCount, AGENT_SIZE, RAY_COUNT, MAX_DISTANCE, SPAWNS );
 
         for(int i = 0; i < LAYER_COUNT; i++)
         {
@@ -73,10 +73,29 @@ class Agent
         unsigned int WeightsToMutate = WeightCountToMutate( ENGINE ), Layer = layerToMutate(ENGINE), Weight;
         std::uniform_int_distribution<int> Weights(0, brain.layers[ Layer ].Weights.arr.size());
 
+        int sign = 1;
+        std::uniform_real_distribution<double> Signs(-1,1);
+
         for(int i = 0; i < WeightsToMutate; i++)
         {
             Weight = Weights(ENGINE);
-            brain.layers[ Layer ].Weights.arr[ Weight ] += 0.25 * brain.layers[ Layer ].Weights.arr[ Weight ];
+
+            if ( Signs(ENGINE) > 0 ) sign = 1;
+            else sign = -1;
+
+            brain.layers[ Layer ].Weights.arr[ Weight ] += sign * 0.25 * brain.layers[ Layer ].Weights.arr[ Weight ];
+        }
+
+        Weights = std::uniform_int_distribution<int>(0, brain.layers[ Layer ].Bias.arr.size());
+
+        for(int i = 0; i < WeightsToMutate; i++)
+        {
+            Weight = Weights(ENGINE);
+
+            if ( Signs(ENGINE) > 0 ) sign = 1;
+            else sign = -1;
+
+            brain.layers[ Layer ].Bias.arr[ Weight ] += sign * 0.25 * brain.layers[ Layer ].Bias.arr[ Weight ];
         }
     }
 
@@ -103,7 +122,7 @@ public:
     float MaxDisplacement;
     float LifeSpan;
 
-    Agent(int layers, float scale, int rayCount, float maxDist)
+    Agent(int layers, float scale, int rayCount, float maxDist, const std::vector<sf::Vector2f> &SPAWNS)
     {
         LifeSpan = 0;
         Fitness = 0;
@@ -151,7 +170,7 @@ public:
         brain = Brain(layers);
     }
 
-    static void Reproduce(std::vector<Agent> &Agents)
+    static void Reproduce(std::vector<Agent> &Agents, const std::vector<sf::Vector2f> &SPAWNS)
     {
         std::vector<Data> data;
         data.resize(Agents.size());
@@ -222,8 +241,8 @@ public:
             }
 
 
-            Agent child1 = Agents[ firstParent ].CrossOver( Agents[ secondParent ], 1 ),
-                child2 = Agents[ secondParent ].CrossOver( Agents[ firstParent ], 1 );
+            Agent child1 = Agents[ firstParent ].CrossOver( Agents[ secondParent ], 1, SPAWNS ),
+                child2 = Agents[ secondParent ].CrossOver( Agents[ firstParent ], 1, SPAWNS );
 
             child1.Mutate();
             child2.Mutate();
@@ -241,19 +260,8 @@ public:
     {
         for(int i = 0; i < Agents.size(); i++)
         {
-            Agents[i].Fitness = Agents[i].LifeSpan * Agents[i].MaxDistance * Agents[i].MaxDisplacement;
+            Agents[i].Fitness = Agents[i].MaxDisplacement * Agents[i].MaxDistance * Agents[i].LifeSpan;
             if ( Agents[i].Fitness < 0 ) Agents[i].Fitness = 0;
-        }
-
-        float totalFitness = 0;
-        for(int i = 0; i < Agents.size(); i++)
-        {
-            totalFitness += Agents[i].Fitness;
-        }
-
-        for(int i = 0; i < Agents.size(); i++)
-        {
-            Agents[i].Fitness /= totalFitness;
         }
     }
 
